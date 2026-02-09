@@ -1,0 +1,408 @@
+
+
+23BAI1156 - KOMMANA SRIRAM
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers
+    from tensorflow.keras.optimizers import Adagrad, RMSprop, Adam
+
+    print("TF Version:", tf.__version__)
+
+    /home/student/.local/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    2026-02-03 13:03:03.939317: I external/local_xla/xla/tsl/cuda/cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+    2026-02-03 13:03:04.047349: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+    2026-02-03 13:03:08.567972: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+    To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+    2026-02-03 13:03:15.943956: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+    2026-02-03 13:03:15.948900: I external/local_xla/xla/tsl/cuda/cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+
+    TF Version: 2.20.0
+
+    (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
+
+    x_train = x_train.astype("float32") / 255.0
+    x_test = x_test.astype("float32") / 255.0
+
+    x_train = x_train.reshape(-1, 784)
+    x_test = x_test.reshape(-1, 784)
+
+    print("Dense Dataset Shape:", x_train.shape)
+
+    Dense Dataset Shape: (60000, 784)
+
+    x_train_sparse = x_train.copy()
+    x_test_sparse = x_test.copy()
+
+    threshold = 0.3
+    x_train_sparse[x_train_sparse < threshold] = 0
+    x_test_sparse[x_test_sparse < threshold] = 0
+
+    print("Sparsity %:", np.mean(x_train_sparse == 0) * 100)
+
+    Sparsity %: 84.89348639455783
+
+    plt.figure(figsize=(6,3))
+
+    plt.subplot(1,2,1)
+    plt.imshow(x_train[0].reshape(28,28), cmap='gray')
+    plt.title("Dense")
+
+    plt.subplot(1,2,2)
+    plt.imshow(x_train_sparse[0].reshape(28,28), cmap='gray')
+    plt.title("Sparse")
+
+    plt.show()
+
+[]
+
+    def create_model():
+        model = keras.Sequential([
+            layers.Dense(256, activation='relu', input_shape=(784,)),
+            layers.Dense(128, activation='relu'),
+            layers.Dense(10, activation='softmax')
+        ])
+        return model
+
+    def train_model(optimizer, x_data, y_data):
+        model = create_model()
+        model.compile(optimizer=optimizer,
+                      loss='sparse_categorical_crossentropy',
+                      metrics=['accuracy'])
+
+        history = model.fit(x_data, y_data,
+                            epochs=10,
+                            batch_size=128,
+                            validation_split=0.1,
+                            verbose=1)
+        return history
+
+    hist_adagrad_dense = train_model(Adagrad(learning_rate=0.01), x_train, y_train)
+    hist_rms_dense = train_model(RMSprop(learning_rate=0.001), x_train, y_train)
+    hist_adam_dense = train_model(Adam(learning_rate=0.001), x_train, y_train)
+
+    2026-02-03 13:04:18.657335: E external/local_xla/xla/stream_executor/cuda/cuda_platform.cc:51] failed call to cuInit: INTERNAL: CUDA error: Failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+    /home/student/.local/lib/python3.10/site-packages/keras/src/layers/core/dense.py:95: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+      super().__init__(activity_regularizer=activity_regularizer, **kwargs)
+
+    Epoch 1/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - accuracy: 0.8173 - loss: 0.7140 - val_accuracy: 0.9168 - val_loss: 0.2986
+    Epoch 2/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9077 - loss: 0.3257 - val_accuracy: 0.9345 - val_loss: 0.2345
+    Epoch 3/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9221 - loss: 0.2718 - val_accuracy: 0.9407 - val_loss: 0.2083
+    Epoch 4/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9321 - loss: 0.2388 - val_accuracy: 0.9503 - val_loss: 0.1830
+    Epoch 5/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9391 - loss: 0.2140 - val_accuracy: 0.9558 - val_loss: 0.1649
+    Epoch 6/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9446 - loss: 0.1946 - val_accuracy: 0.9577 - val_loss: 0.1551
+    Epoch 7/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9489 - loss: 0.1782 - val_accuracy: 0.9625 - val_loss: 0.1423
+    Epoch 8/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9534 - loss: 0.1643 - val_accuracy: 0.9657 - val_loss: 0.1327
+    Epoch 9/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9568 - loss: 0.1530 - val_accuracy: 0.9668 - val_loss: 0.1264
+    Epoch 10/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9595 - loss: 0.1429 - val_accuracy: 0.9680 - val_loss: 0.1225
+    Epoch 1/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9151 - loss: 0.2914 - val_accuracy: 0.9610 - val_loss: 0.1286
+    Epoch 2/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9658 - loss: 0.1129 - val_accuracy: 0.9737 - val_loss: 0.0865
+    Epoch 3/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9779 - loss: 0.0749 - val_accuracy: 0.9747 - val_loss: 0.0849
+    Epoch 4/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9834 - loss: 0.0525 - val_accuracy: 0.9742 - val_loss: 0.0831
+    Epoch 5/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9870 - loss: 0.0406 - val_accuracy: 0.9768 - val_loss: 0.0787
+    Epoch 6/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9899 - loss: 0.0316 - val_accuracy: 0.9785 - val_loss: 0.0782
+    Epoch 7/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9928 - loss: 0.0236 - val_accuracy: 0.9690 - val_loss: 0.1179
+    Epoch 8/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9936 - loss: 0.0195 - val_accuracy: 0.9803 - val_loss: 0.0784
+    Epoch 9/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9954 - loss: 0.0142 - val_accuracy: 0.9785 - val_loss: 0.0913
+    Epoch 10/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9960 - loss: 0.0125 - val_accuracy: 0.9802 - val_loss: 0.0903
+    Epoch 1/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9192 - loss: 0.2811 - val_accuracy: 0.9673 - val_loss: 0.1157
+    Epoch 2/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9686 - loss: 0.1063 - val_accuracy: 0.9738 - val_loss: 0.0864
+    Epoch 3/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9790 - loss: 0.0692 - val_accuracy: 0.9750 - val_loss: 0.0809
+    Epoch 4/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9850 - loss: 0.0488 - val_accuracy: 0.9780 - val_loss: 0.0731
+    Epoch 5/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9885 - loss: 0.0367 - val_accuracy: 0.9775 - val_loss: 0.0835
+    Epoch 6/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9916 - loss: 0.0276 - val_accuracy: 0.9798 - val_loss: 0.0686
+    Epoch 7/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9926 - loss: 0.0228 - val_accuracy: 0.9765 - val_loss: 0.0849
+    Epoch 8/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9940 - loss: 0.0195 - val_accuracy: 0.9803 - val_loss: 0.0753
+    Epoch 9/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9956 - loss: 0.0135 - val_accuracy: 0.9825 - val_loss: 0.0741
+    Epoch 10/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9956 - loss: 0.0134 - val_accuracy: 0.9765 - val_loss: 0.0956
+
+    hist_adagrad_sparse = train_model(Adagrad(learning_rate=0.01), x_train_sparse, y_train)
+    hist_rms_sparse = train_model(RMSprop(learning_rate=0.001), x_train_sparse, y_train)
+    hist_adam_sparse = train_model(Adam(learning_rate=0.001), x_train_sparse, y_train)
+
+    Epoch 1/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8131 - loss: 0.7297 - val_accuracy: 0.9212 - val_loss: 0.3034
+    Epoch 2/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9063 - loss: 0.3293 - val_accuracy: 0.9335 - val_loss: 0.2422
+    Epoch 3/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9206 - loss: 0.2755 - val_accuracy: 0.9413 - val_loss: 0.2085
+    Epoch 4/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9300 - loss: 0.2430 - val_accuracy: 0.9522 - val_loss: 0.1868
+    Epoch 5/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9371 - loss: 0.2186 - val_accuracy: 0.9538 - val_loss: 0.1694
+    Epoch 6/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9431 - loss: 0.1989 - val_accuracy: 0.9592 - val_loss: 0.1587
+    Epoch 7/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9474 - loss: 0.1829 - val_accuracy: 0.9623 - val_loss: 0.1472
+    Epoch 8/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9526 - loss: 0.1690 - val_accuracy: 0.9630 - val_loss: 0.1386
+    Epoch 9/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9556 - loss: 0.1570 - val_accuracy: 0.9667 - val_loss: 0.1311
+    Epoch 10/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9588 - loss: 0.1469 - val_accuracy: 0.9670 - val_loss: 0.1248
+    Epoch 1/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9141 - loss: 0.2904 - val_accuracy: 0.9602 - val_loss: 0.1436
+    Epoch 2/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9659 - loss: 0.1129 - val_accuracy: 0.9733 - val_loss: 0.0889
+    Epoch 3/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9775 - loss: 0.0718 - val_accuracy: 0.9772 - val_loss: 0.0765
+    Epoch 4/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9837 - loss: 0.0515 - val_accuracy: 0.9785 - val_loss: 0.0746
+    Epoch 5/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9881 - loss: 0.0370 - val_accuracy: 0.9775 - val_loss: 0.0809
+    Epoch 6/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9912 - loss: 0.0278 - val_accuracy: 0.9808 - val_loss: 0.0758
+    Epoch 7/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9933 - loss: 0.0207 - val_accuracy: 0.9810 - val_loss: 0.0767
+    Epoch 8/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9950 - loss: 0.0153 - val_accuracy: 0.9807 - val_loss: 0.0776
+    Epoch 9/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9962 - loss: 0.0117 - val_accuracy: 0.9800 - val_loss: 0.0834
+    Epoch 10/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9974 - loss: 0.0084 - val_accuracy: 0.9795 - val_loss: 0.0939
+    Epoch 1/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - accuracy: 0.9154 - loss: 0.2973 - val_accuracy: 0.9653 - val_loss: 0.1178
+    Epoch 2/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9660 - loss: 0.1120 - val_accuracy: 0.9775 - val_loss: 0.0854
+    Epoch 3/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9786 - loss: 0.0704 - val_accuracy: 0.9765 - val_loss: 0.0890
+    Epoch 4/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9858 - loss: 0.0485 - val_accuracy: 0.9810 - val_loss: 0.0742
+    Epoch 5/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9889 - loss: 0.0352 - val_accuracy: 0.9798 - val_loss: 0.0768
+    Epoch 6/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9922 - loss: 0.0252 - val_accuracy: 0.9752 - val_loss: 0.0958
+    Epoch 7/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9935 - loss: 0.0203 - val_accuracy: 0.9807 - val_loss: 0.0767
+    Epoch 8/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9944 - loss: 0.0173 - val_accuracy: 0.9808 - val_loss: 0.0797
+    Epoch 9/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9970 - loss: 0.0096 - val_accuracy: 0.9822 - val_loss: 0.0878
+    Epoch 10/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9956 - loss: 0.0141 - val_accuracy: 0.9760 - val_loss: 0.1066
+
+    def plot_loss(histories, title):
+        plt.figure(figsize=(8,5))
+        for name, hist in histories.items():
+            plt.plot(hist.history['loss'], label=name)
+        plt.title(title)
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.show()
+
+    plot_loss({
+        "Adagrad": hist_adagrad_dense,
+        "RMSProp": hist_rms_dense,
+        "Adam": hist_adam_dense
+    }, "Dense Dataset Loss")
+
+    plot_loss({
+        "Adagrad": hist_adagrad_sparse,
+        "RMSProp": hist_rms_sparse,
+        "Adam": hist_adam_sparse
+    }, "Sparse Dataset Loss")
+
+[]
+
+[]
+
+    def plot_acc(histories, title):
+        plt.figure(figsize=(8,5))
+        for name, hist in histories.items():
+            plt.plot(hist.history['accuracy'], label=name)
+        plt.title(title)
+        plt.xlabel("Epochs")
+        plt.ylabel("Accuracy")
+        plt.legend()
+        plt.show()
+
+    plot_acc({
+        "Adagrad": hist_adagrad_dense,
+        "RMSProp": hist_rms_dense,
+        "Adam": hist_adam_dense
+    }, "Dense Dataset Accuracy")
+
+    plot_acc({
+        "Adagrad": hist_adagrad_sparse,
+        "RMSProp": hist_rms_sparse,
+        "Adam": hist_adam_sparse
+    }, "Sparse Dataset Accuracy")
+
+[]
+
+[]
+
+    def lr_experiment(optimizer_class, lr_list, x_data, y_data, name):
+        histories = {}
+        
+        for lr in lr_list:
+            print(f"Training {name} with LR = {lr}")
+            model = create_model()
+            optimizer = optimizer_class(learning_rate=lr)
+            
+            model.compile(optimizer=optimizer,
+                          loss='sparse_categorical_crossentropy',
+                          metrics=['accuracy'])
+            
+            history = model.fit(x_data, y_data,
+                                epochs=5,
+                                batch_size=128,
+                                verbose=0)
+            
+            histories[f"lr={lr}"] = history
+        
+        return histories
+
+    lr_values = [0.1, 0.01, 0.001]
+
+    adam_lr_hist = lr_experiment(Adam, lr_values, x_train, y_train, "Adam")
+    rms_lr_hist = lr_experiment(RMSprop, lr_values, x_train, y_train, "RMSProp")
+    ada_lr_hist = lr_experiment(Adagrad, lr_values, x_train, y_train, "Adagrad")
+
+    Training Adam with LR = 0.1
+    Training Adam with LR = 0.01
+    Training Adam with LR = 0.001
+    Training RMSProp with LR = 0.1
+    Training RMSProp with LR = 0.01
+    Training RMSProp with LR = 0.001
+    Training Adagrad with LR = 0.1
+    Training Adagrad with LR = 0.01
+    Training Adagrad with LR = 0.001
+
+    def plot_lr(histories, title):
+        plt.figure(figsize=(8,5))
+        for label, hist in histories.items():
+            plt.plot(hist.history['loss'], label=label)
+        plt.title(title)
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.show()
+
+    plot_lr(adam_lr_hist, "Adam LR Sensitivity")
+    plot_lr(rms_lr_hist, "RMSProp LR Sensitivity")
+    plot_lr(ada_lr_hist, "Adagrad LR Sensitivity")
+
+[]
+
+[]
+
+[]
+
+    noise_factor = 0.5
+
+    x_train_noisy = x_train + noise_factor * np.random.normal(size=x_train.shape)
+    x_train_noisy = np.clip(x_train_noisy, 0, 1)
+
+    plt.imshow(x_train_noisy[0].reshape(28,28), cmap='gray')
+    plt.title("Noisy Image")
+    plt.show()
+
+[]
+
+    hist_adam_noise = train_model(Adam(0.001), x_train_noisy, y_train)
+    hist_rms_noise = train_model(RMSprop(0.001), x_train_noisy, y_train)
+    hist_ada_noise = train_model(Adagrad(0.01), x_train_noisy, y_train)
+
+    Epoch 1/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.7866 - loss: 0.6688 - val_accuracy: 0.8762 - val_loss: 0.4014
+    Epoch 2/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8768 - loss: 0.3858 - val_accuracy: 0.9020 - val_loss: 0.3123
+    Epoch 3/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9121 - loss: 0.2748 - val_accuracy: 0.9162 - val_loss: 0.2645
+    Epoch 4/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9354 - loss: 0.2003 - val_accuracy: 0.9203 - val_loss: 0.2553
+    Epoch 5/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9550 - loss: 0.1421 - val_accuracy: 0.9238 - val_loss: 0.2567
+    Epoch 6/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9705 - loss: 0.0952 - val_accuracy: 0.9210 - val_loss: 0.2650
+    Epoch 7/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9829 - loss: 0.0603 - val_accuracy: 0.9215 - val_loss: 0.2810
+    Epoch 8/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9907 - loss: 0.0375 - val_accuracy: 0.9192 - val_loss: 0.3168
+    Epoch 9/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9950 - loss: 0.0223 - val_accuracy: 0.9242 - val_loss: 0.3015
+    Epoch 10/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9954 - loss: 0.0187 - val_accuracy: 0.9162 - val_loss: 0.3676
+    Epoch 1/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.7516 - loss: 0.7627 - val_accuracy: 0.8687 - val_loss: 0.4198
+    Epoch 2/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8681 - loss: 0.4072 - val_accuracy: 0.8792 - val_loss: 0.3699
+    Epoch 3/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9113 - loss: 0.2749 - val_accuracy: 0.9130 - val_loss: 0.2777
+    Epoch 4/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9385 - loss: 0.1905 - val_accuracy: 0.9155 - val_loss: 0.2557
+    Epoch 5/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9571 - loss: 0.1317 - val_accuracy: 0.9188 - val_loss: 0.2637
+    Epoch 6/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9715 - loss: 0.0861 - val_accuracy: 0.9310 - val_loss: 0.2482
+    Epoch 7/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9820 - loss: 0.0551 - val_accuracy: 0.9237 - val_loss: 0.2856
+    Epoch 8/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9880 - loss: 0.0368 - val_accuracy: 0.9227 - val_loss: 0.3201
+    Epoch 9/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9930 - loss: 0.0236 - val_accuracy: 0.9273 - val_loss: 0.3345
+    Epoch 10/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9943 - loss: 0.0184 - val_accuracy: 0.9255 - val_loss: 0.3637
+    Epoch 1/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.6503 - loss: 1.1385 - val_accuracy: 0.8287 - val_loss: 0.5560
+    Epoch 2/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8180 - loss: 0.5834 - val_accuracy: 0.8562 - val_loss: 0.4607
+    Epoch 3/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8394 - loss: 0.5130 - val_accuracy: 0.8628 - val_loss: 0.4387
+    Epoch 4/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.8498 - loss: 0.4767 - val_accuracy: 0.8692 - val_loss: 0.4170
+    Epoch 5/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.8591 - loss: 0.4519 - val_accuracy: 0.8723 - val_loss: 0.4127
+    Epoch 6/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8644 - loss: 0.4313 - val_accuracy: 0.8752 - val_loss: 0.4006
+    Epoch 7/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8704 - loss: 0.4143 - val_accuracy: 0.8775 - val_loss: 0.3952
+    Epoch 8/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8756 - loss: 0.3981 - val_accuracy: 0.8763 - val_loss: 0.3934
+    Epoch 9/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8819 - loss: 0.3828 - val_accuracy: 0.8803 - val_loss: 0.3808
+    Epoch 10/10
+    422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.8861 - loss: 0.3673 - val_accuracy: 0.8812 - val_loss: 0.3815
+
+    plot_loss({
+        "Adam": hist_adam_noise,
+        "RMSProp": hist_rms_noise,
+        "Adagrad": hist_ada_noise
+    }, "Training with Noisy Gradients")
+
+[]
