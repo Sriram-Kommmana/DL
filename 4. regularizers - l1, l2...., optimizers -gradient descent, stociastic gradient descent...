@@ -1,0 +1,407 @@
+
+
+#KOMMANA SRIRAM
+
+#23BAI1156
+
+#Setup, Imports, Dataset, Model
+
+    import torch
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device
+
+    device(type='cuda')
+
+    !pip install torchmetrics
+
+    Collecting torchmetrics
+      Downloading torchmetrics-1.8.2-py3-none-any.whl.metadata (22 kB)
+    Requirement already satisfied: numpy>1.20.0 in /usr/local/lib/python3.12/dist-packages (from torchmetrics) (2.0.2)
+    Requirement already satisfied: packaging>17.1 in /usr/local/lib/python3.12/dist-packages (from torchmetrics) (25.0)
+    Requirement already satisfied: torch>=2.0.0 in /usr/local/lib/python3.12/dist-packages (from torchmetrics) (2.9.0+cu126)
+    Collecting lightning-utilities>=0.8.0 (from torchmetrics)
+      Downloading lightning_utilities-0.15.2-py3-none-any.whl.metadata (5.7 kB)
+    Requirement already satisfied: setuptools in /usr/local/lib/python3.12/dist-packages (from lightning-utilities>=0.8.0->torchmetrics) (75.2.0)
+    Requirement already satisfied: typing_extensions in /usr/local/lib/python3.12/dist-packages (from lightning-utilities>=0.8.0->torchmetrics) (4.15.0)
+    Requirement already satisfied: filelock in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (3.20.2)
+    Requirement already satisfied: sympy>=1.13.3 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (1.14.0)
+    Requirement already satisfied: networkx>=2.5.1 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (3.6.1)
+    Requirement already satisfied: jinja2 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (3.1.6)
+    Requirement already satisfied: fsspec>=0.8.5 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (2025.3.0)
+    Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.6.77 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (12.6.77)
+    Requirement already satisfied: nvidia-cuda-runtime-cu12==12.6.77 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (12.6.77)
+    Requirement already satisfied: nvidia-cuda-cupti-cu12==12.6.80 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (12.6.80)
+    Requirement already satisfied: nvidia-cudnn-cu12==9.10.2.21 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (9.10.2.21)
+    Requirement already satisfied: nvidia-cublas-cu12==12.6.4.1 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (12.6.4.1)
+    Requirement already satisfied: nvidia-cufft-cu12==11.3.0.4 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (11.3.0.4)
+    Requirement already satisfied: nvidia-curand-cu12==10.3.7.77 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (10.3.7.77)
+    Requirement already satisfied: nvidia-cusolver-cu12==11.7.1.2 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (11.7.1.2)
+    Requirement already satisfied: nvidia-cusparse-cu12==12.5.4.2 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (12.5.4.2)
+    Requirement already satisfied: nvidia-cusparselt-cu12==0.7.1 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (0.7.1)
+    Requirement already satisfied: nvidia-nccl-cu12==2.27.5 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (2.27.5)
+    Requirement already satisfied: nvidia-nvshmem-cu12==3.3.20 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (3.3.20)
+    Requirement already satisfied: nvidia-nvtx-cu12==12.6.77 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (12.6.77)
+    Requirement already satisfied: nvidia-nvjitlink-cu12==12.6.85 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (12.6.85)
+    Requirement already satisfied: nvidia-cufile-cu12==1.11.1.6 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (1.11.1.6)
+    Requirement already satisfied: triton==3.5.0 in /usr/local/lib/python3.12/dist-packages (from torch>=2.0.0->torchmetrics) (3.5.0)
+    Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.12/dist-packages (from sympy>=1.13.3->torch>=2.0.0->torchmetrics) (1.3.0)
+    Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.12/dist-packages (from jinja2->torch>=2.0.0->torchmetrics) (3.0.3)
+    Downloading torchmetrics-1.8.2-py3-none-any.whl (983 kB)
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 983.2/983.2 kB 24.6 MB/s eta 0:00:00
+    etrics
+    Successfully installed lightning-utilities-0.15.2 torchmetrics-1.8.2
+
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from sklearn.datasets import make_classification
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import StandardScaler
+    from torchmetrics.classification import Accuracy, Precision, Recall, F1Score
+
+    X, y = make_classification(
+        n_samples=5000,
+        n_features=50,
+        n_informative=10,
+        n_redundant=10,
+        n_classes=2,
+        random_state=42
+    )
+
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+
+    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+
+    X_train = torch.tensor(X_train, dtype=torch.float32)
+    y_train = torch.tensor(y_train, dtype=torch.long)
+    X_val = torch.tensor(X_val, dtype=torch.float32)
+    y_val = torch.tensor(y_val, dtype=torch.long)
+    X_test = torch.tensor(X_test, dtype=torch.float32)
+    y_test = torch.tensor(y_test, dtype=torch.long)
+
+    X_train, y_train = X_train.to(device), y_train.to(device)
+    X_val, y_val = X_val.to(device), y_val.to(device)
+    X_test, y_test = X_test.to(device), y_test.to(device)
+
+    class SimpleNN(nn.Module):
+        def __init__(self, input_dim):
+            super(SimpleNN, self).__init__()
+            self.fc1 = nn.Linear(input_dim, 64)
+            self.relu = nn.ReLU()
+            self.fc2 = nn.Linear(64, 2)
+
+        def forward(self, x):
+            x = self.relu(self.fc1(x))
+            x = self.fc2(x)
+            return x
+
+    from torch.utils.data import TensorDataset, DataLoader
+
+    batch_size = 64
+
+    train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(TensorDataset(X_val, y_val), batch_size=batch_size)
+    test_loader = DataLoader(TensorDataset(X_test, y_test), batch_size=batch_size)
+
+    criterion = nn.CrossEntropyLoss()
+
+#Regularizers (L1, L2, ElasticNet, Max-Norm) + Optimizers
+
+    def l1_regularization(model, lambda_l1):
+        l1_norm = 0
+        for param in model.parameters():
+            l1_norm += torch.sum(torch.abs(param))
+        return lambda_l1 * l1_norm
+
+
+    def l2_regularization(model, lambda_l2):
+        l2_norm = 0
+        for param in model.parameters():
+            l2_norm += torch.sum(param ** 2)
+        return lambda_l2 * l2_norm
+
+
+    def elastic_net_regularization(model, alpha, lambda_en):
+        l1 = 0
+        l2 = 0
+        for param in model.parameters():
+            l1 += torch.sum(torch.abs(param))
+            l2 += torch.sum(param ** 2)
+        return lambda_en * (alpha * l1 + (1 - alpha) * l2)
+
+    def apply_max_norm(model, max_norm=3.0):
+        for param in model.parameters():
+            if param.requires_grad:
+                norm = param.norm(2)
+                if norm > max_norm:
+                    param.data = param.data * (max_norm / norm)
+
+    def get_optimizer(name, model, lr=0.01):
+        if name == "GD":
+            return optim.SGD(model.parameters(), lr=lr)
+
+        elif name == "SGD":
+            return optim.SGD(model.parameters(), lr=lr)
+
+        elif name == "MB-SGD":
+            return optim.SGD(model.parameters(), lr=lr)
+
+        elif name == "Momentum":
+            return optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+
+        elif name == "Nesterov":
+            return optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True)
+
+    accuracy_metric = Accuracy(task="binary").to(device)
+    precision_metric = Precision(task="binary").to(device)
+    recall_metric = Recall(task="binary").to(device)
+    f1_metric = F1Score(task="binary").to(device)
+
+#Training Loop with Regularizers + Logging
+
+    def compute_sparsity(model, threshold=1e-3):
+        total = 0
+        near_zero = 0
+        for param in model.parameters():
+            total += param.numel()
+            near_zero += torch.sum(torch.abs(param) < threshold).item()
+        return near_zero / total
+
+    def train_model(model, optimizer, regularizer_type, epochs=30,
+                    lambda_val=0.001, alpha=0.5, max_norm_val=3):
+
+        train_losses = []
+        val_losses = []
+        sparsity_list = []
+
+        for epoch in range(epochs):
+            model.train()
+            epoch_loss = 0
+
+            for Xb, yb in train_loader:
+                optimizer.zero_grad()
+                outputs = model(Xb)
+                loss = criterion(outputs, yb)
+
+                # Add regularization
+                if regularizer_type == "L1":
+                    loss += l1_regularization(model, lambda_val)
+                elif regularizer_type == "L2":
+                    loss += l2_regularization(model, lambda_val)
+                elif regularizer_type == "ElasticNet":
+                    loss += elastic_net_regularization(model, alpha, lambda_val)
+
+                loss.backward()
+                optimizer.step()
+
+                # Max Norm
+                if regularizer_type == "MaxNorm":
+                    apply_max_norm(model, max_norm_val)
+
+                epoch_loss += loss.item()
+
+            avg_train_loss = epoch_loss / len(train_loader)
+            train_losses.append(avg_train_loss)
+
+            # Validation
+            model.eval()
+            val_loss = 0
+            with torch.no_grad():
+                for Xb, yb in val_loader:
+                    outputs = model(Xb)
+                    loss = criterion(outputs, yb)
+                    val_loss += loss.item()
+
+            avg_val_loss = val_loss / len(val_loader)
+            val_losses.append(avg_val_loss)
+
+            sparsity = compute_sparsity(model)
+            sparsity_list.append(sparsity)
+
+        return train_losses, val_losses, sparsity_list
+
+#Running All Experiments
+
+    regularizers = {
+        "None": "None",
+        "L1": "L1",
+        "L2": "L2",
+        "ElasticNet": "ElasticNet",
+        "MaxNorm": "MaxNorm"
+    }
+
+    optimizers = ["GD", "SGD", "MB-SGD", "Momentum", "Nesterov"]
+
+    results = {}
+
+    for reg_name in regularizers:
+        results[reg_name] = {}
+
+        for opt_name in optimizers:
+            print(f"Training: Regularizer={reg_name}, Optimizer={opt_name}")
+
+            model = SimpleNN(input_dim=50).to(device)
+            optimizer = get_optimizer(opt_name, model, lr=0.01)
+
+            train_losses, val_losses, sparsity_list = train_model(
+                model,
+                optimizer,
+                regularizer_type=reg_name,
+                epochs=30
+            )
+
+            results[reg_name][opt_name] = {
+                "train_loss": train_losses,
+                "val_loss": val_losses,
+                "sparsity": sparsity_list,
+                "model": model
+            }
+
+    Training: Regularizer=None, Optimizer=GD
+    Training: Regularizer=None, Optimizer=SGD
+    Training: Regularizer=None, Optimizer=MB-SGD
+    Training: Regularizer=None, Optimizer=Momentum
+    Training: Regularizer=None, Optimizer=Nesterov
+    Training: Regularizer=L1, Optimizer=GD
+    Training: Regularizer=L1, Optimizer=SGD
+    Training: Regularizer=L1, Optimizer=MB-SGD
+    Training: Regularizer=L1, Optimizer=Momentum
+    Training: Regularizer=L1, Optimizer=Nesterov
+    Training: Regularizer=L2, Optimizer=GD
+    Training: Regularizer=L2, Optimizer=SGD
+    Training: Regularizer=L2, Optimizer=MB-SGD
+    Training: Regularizer=L2, Optimizer=Momentum
+    Training: Regularizer=L2, Optimizer=Nesterov
+    Training: Regularizer=ElasticNet, Optimizer=GD
+    Training: Regularizer=ElasticNet, Optimizer=SGD
+    Training: Regularizer=ElasticNet, Optimizer=MB-SGD
+    Training: Regularizer=ElasticNet, Optimizer=Momentum
+    Training: Regularizer=ElasticNet, Optimizer=Nesterov
+    Training: Regularizer=MaxNorm, Optimizer=GD
+    Training: Regularizer=MaxNorm, Optimizer=SGD
+    Training: Regularizer=MaxNorm, Optimizer=MB-SGD
+    Training: Regularizer=MaxNorm, Optimizer=Momentum
+    Training: Regularizer=MaxNorm, Optimizer=Nesterov
+
+#Plotting Convergence Curves and Results
+
+    def plot_losses(results, reg_name):
+        plt.figure(figsize=(12, 6))
+        for opt_name in results[reg_name]:
+            plt.plot(results[reg_name][opt_name]["train_loss"], label=opt_name)
+        plt.title(f"Training Loss — {reg_name}")
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.show()
+
+    plot_losses(results, "L1")
+    plot_losses(results, "L2")
+    plot_losses(results, "ElasticNet")
+    plot_losses(results, "MaxNorm")
+    plot_losses(results, "None")
+
+[]
+
+[]
+
+[]
+
+[]
+
+[]
+
+    def evaluate_model(model):
+        model.eval()
+        preds = []
+        targets = []
+
+        with torch.no_grad():
+            for Xb, yb in test_loader:
+                outputs = model(Xb)
+                _, predicted = torch.max(outputs, 1)
+                preds.append(predicted)
+                targets.append(yb)
+
+        preds = torch.cat(preds)
+        targets = torch.cat(targets)
+
+        acc = accuracy_metric(preds, targets).item()
+        prec = precision_metric(preds, targets).item()
+        rec = recall_metric(preds, targets).item()
+        f1 = f1_metric(preds, targets).item()
+
+        return acc, prec, rec, f1
+
+    final_results = []
+
+    for reg in results:
+        for opt in results[reg]:
+            model = results[reg][opt]["model"]
+            acc, prec, rec, f1 = evaluate_model(model)
+            sparsity = results[reg][opt]["sparsity"][-1]
+
+            final_results.append([reg, opt, acc, prec, rec, f1, sparsity])
+
+    import pandas as pd
+
+    df = pd.DataFrame(final_results, columns=[
+        "Regularizer", "Optimizer", "Accuracy", "Precision", "Recall", "F1", "Sparsity"
+    ])
+
+    df
+
+    {"summary":"{\n  \"name\": \"df\",\n  \"rows\": 25,\n  \"fields\": [\n    {\n      \"column\": \"Regularizer\",\n      \"properties\": {\n        \"dtype\": \"category\",\n        \"num_unique_values\": 5,\n        \"samples\": [\n          \"L1\",\n          \"MaxNorm\",\n          \"L2\"\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Optimizer\",\n      \"properties\": {\n        \"dtype\": \"category\",\n        \"num_unique_values\": 5,\n        \"samples\": [\n          \"SGD\",\n          \"Nesterov\",\n          \"MB-SGD\"\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Accuracy\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0.024213495846194876,\n        \"min\": 0.8999999761581421,\n        \"max\": 0.9653333425521851,\n        \"num_unique_values\": 20,\n        \"samples\": [\n          0.9226666688919067,\n          0.9133333563804626,\n          0.9559999704360962\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Precision\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0.016523437700650897,\n        \"min\": 0.9031413793563843,\n        \"max\": 0.9587628841400146,\n        \"num_unique_values\": 24,\n        \"samples\": [\n          0.9539641737937927,\n          0.9205479621887207,\n          0.9354838728904724\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Recall\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0.03377031032654426,\n        \"min\": 0.8795811533927917,\n        \"max\": 0.9764397740364075,\n        \"num_unique_values\": 13,\n        \"samples\": [\n          0.9712041616439819,\n          0.9031413793563843,\n          0.9109947681427002\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"F1\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0.024322871276613426,\n        \"min\": 0.8995984196662903,\n        \"max\": 0.9662337899208069,\n        \"num_unique_values\": 24,\n        \"samples\": [\n          0.9650711417198181,\n          0.8995984196662903,\n          0.9230769276618958\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Sparsity\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0.18127451112581505,\n        \"min\": 0.0038302887448438423,\n        \"max\": 0.636122569239835,\n        \"num_unique_values\": 23,\n        \"samples\": [\n          0.043606364172068354,\n          0.00648202710665881,\n          0.005303476723629935\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}","type":"dataframe","variable_name":"df"}
+
+    def plot_val_losses(results, reg_name):
+        plt.figure(figsize=(12, 6))
+        for opt_name in results[reg_name]:
+            plt.plot(results[reg_name][opt_name]["val_loss"], label=opt_name)
+        plt.title(f"Validation Loss — {reg_name}")
+        plt.xlabel("Epochs")
+        plt.ylabel("Validation Loss")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+    plot_val_losses(results, "None")
+    plot_val_losses(results, "L1")
+    plot_val_losses(results, "L2")
+    plot_val_losses(results, "ElasticNet")
+    plot_val_losses(results, "MaxNorm")
+
+[]
+
+[]
+
+[]
+
+[]
+
+[]
+
+    def plot_train_vs_val(results, reg_name, opt_name):
+        plt.figure(figsize=(10, 5))
+        plt.plot(results[reg_name][opt_name]["train_loss"], label="Train Loss")
+        plt.plot(results[reg_name][opt_name]["val_loss"], label="Val Loss")
+        plt.title(f"{reg_name} + {opt_name}")
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+    plot_train_vs_val(results, "L1", "SGD")
+    plot_train_vs_val(results, "L2", "Momentum")
+    plot_train_vs_val(results, "ElasticNet", "Nesterov")
+
+[]
+
+[]
+
+[]
