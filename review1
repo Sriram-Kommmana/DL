@@ -1,0 +1,15 @@
+1. Project Title and Domain
+
+Deep Learning Based Historical Document Restoration
+The title of the proposed project is “Deep Learning Based Historical Document Restoration using U-Net Architecture.” This project falls under the domain of Computer Vision and Deep Learning. It focuses on the restoration of degraded historical document images using supervised learning techniques. The project aims to apply convolutional neural network-based image-to-image translation methods to recover the original visual quality of damaged document scans. The primary domain of application for this work is digital archival systems and automated document processing, where restoration of aged or degraded documents is essential for improving readability and downstream tasks such as Optical Character Recognition (OCR).
+
+Domain: Deep Learning / Computer Vision
+
+2. Problem Statement / Research Motivation
+
+Historical documents such as manuscripts, printed books, and archival records often suffer from various forms of degradation due to aging, environmental conditions, ink erosion, and physical damage. Common degradation effects include faded text, background stains, noise, blur, and missing regions caused by tears or erosion. These imperfections significantly reduce the visual quality and readability of the document, making it difficult for both humans and automated systems to interpret the content accurately. In particular, Optical Character Recognition (OCR) systems perform poorly on degraded inputs, leading to inaccurate text extraction. Manual restoration of such documents is time-consuming, expensive, and often impractical when dealing with large collections of archival material. Therefore, there is a strong need for an automated, learning-based approach that can effectively restore degraded historical documents and enhance their readability while preserving the original textual information.
+
+3. Objectives of the Project
+
+The primary objective of this project is to develop a deep learning-based framework capable of restoring degraded historical document images by learning the mapping between damaged and clean document representations. The project aims to simulate realistic degradation patterns such as noise, blur, stains, and missing regions to create a paired dataset for supervised learning. Using this dataset, a convolutional neural network model based on the U-Net architecture will be designed and trained to reconstruct clean document patches from their degraded counterparts. Additionally, the project intends to evaluate the performance of the restoration model using suitable image quality metrics and analyze its effectiveness in improving the visual clarity and readability of historical documents. Ultimately, the goal is to demonstrate the feasibility of using deep learning techniques for automated document restoration in digital preservation applications.
+
