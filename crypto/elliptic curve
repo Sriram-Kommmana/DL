@@ -1,0 +1,91 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+int p=17;
+int a=2;
+int b=3;
+
+int modInverse(int n)
+{
+    n=(n%p+p)%p;
+
+    for(int i=1;i<p;i++)
+        if((n*i)%p==1)
+            return i;
+
+    return -1;
+}
+
+struct Point{
+    int x,y;
+};
+
+Point add(Point P, Point Q)
+{
+    int lambda;
+
+    if(P.x==Q.x && P.y==Q.y)
+    {
+        int num=(3*P.x*P.x+a)%p;
+        int den=modInverse((2*P.y)%p);
+        lambda=(num*den)%p;
+    }
+    else
+    {
+        int num=((Q.y-P.y)%p+p)%p;
+        int den=modInverse((Q.x-P.x)%p);
+        lambda=(num*den)%p;
+    }
+
+    lambda=(lambda%p+p)%p;
+
+    int x3=(lambda*lambda-P.x-Q.x)%p;
+    x3=(x3%p+p)%p;
+
+    int y3=(lambda*(P.x-x3)-P.y)%p;
+    y3=(y3%p+p)%p;
+
+    return {x3,y3};
+}
+
+Point multiply(Point P,int n)
+{
+    Point R=P;
+    for(int i=1;i<n;i++)
+        R=add(R,P);
+    return R;
+}
+
+int main()
+{
+    Point G={2,7};
+    Point Pm={1,7};
+
+    int nA=2;
+    int nB=4;
+
+    cout<<"TASK-A\n";
+
+    Point twoP=multiply(G,2);
+    cout<<"2P = ("<<twoP.x<<","<<twoP.y<<")\n";
+
+    Point addPQ=add(G,twoP);
+    cout<<"P+Q = ("<<addPQ.x<<","<<addPQ.y<<")\n\n";
+
+    cout<<"TASK-B\n";
+
+    Point PA=multiply(G,nA);
+    Point PB=multiply(G,nB);
+
+    cout<<"Alice Public Key PA=("<<PA.x<<","<<PA.y<<")\n";
+    cout<<"Bob Public Key PB=("<<PB.x<<","<<PB.y<<")\n";
+
+    Point C1=PB;
+
+    Point shared=multiply(PA,nB);
+
+    Point C2=add(Pm,shared);
+
+    cout<<"C1=("<<C1.x<<","<<C1.y<<")\n";
+    cout<<"C2=("<<C2.x<<","<<C2.y<<")\n";
+}
