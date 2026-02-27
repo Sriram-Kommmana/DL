@@ -1,0 +1,67 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+void RC4(int N, vector<int> key, vector<int> plaintext)
+{
+    vector<int> S(N);
+    for(int i=0;i<N;i++)
+        S[i]=i;
+
+    int j=0;
+
+    // ---------- KSA ----------
+    for(int i=0;i<N;i++)
+    {
+        j=(j+S[i]+key[i%key.size()])%N;
+        swap(S[i],S[j]);
+    }
+
+    // ---------- PRGA ----------
+    int i=0;
+    j=0;
+
+    vector<int> Z,C;
+
+    for(int k=0;k<plaintext.size();k++)
+    {
+        i=(i+1)%N;
+        j=(j+S[i])%N;
+
+        swap(S[i],S[j]);
+
+        int t=(S[i]+S[j])%N;
+        int z=S[t];
+
+        Z.push_back(z);
+        C.push_back(plaintext[k]^z);
+    }
+
+    cout<<"Keystream Z: ";
+    for(int x:Z) cout<<x<<" ";
+    cout<<"\nCiphertext C: ";
+    for(int x:C) cout<<x<<" ";
+    cout<<"\n\n";
+}
+
+int main()
+{
+    // ---------------- TASK-A ----------------
+    cout<<"TASK-A\n";
+
+    int N1=4;
+    vector<int> P1={0,3,1,1};
+    vector<int> K1={2,0};
+
+    RC4(N1,K1,P1);
+
+    // ---------------- TASK-B ----------------
+    cout<<"TASK-B\n";
+
+    int N2=256;
+    vector<int> K2={12,45,201,7,99,150,33,87};
+    vector<int> P2={10,20,30,40};
+
+    RC4(N2,K2,P2);
+
+    return 0;
+}
