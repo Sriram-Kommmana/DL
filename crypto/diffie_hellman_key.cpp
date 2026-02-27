@@ -72,18 +72,33 @@ void find(char m[5][5], char a, char b,
         }
 }
 
+// ---------- CORRECTED ENCRYPT ----------
 string enc(string t, char m[5][5])
 {
     t = prep(t);
     string r = "";
 
-    for (int i = 0; i < t.length(); i += 2)
+    for (int i = 0; i < t.length();)
     {
         char a = t[i];
-        char b = (i + 1 < t.length()) ? t[i + 1] : 'X';
+        char b;
 
-        if (a == b)
+        if (i + 1 < t.length())
+        {
+            b = t[i + 1];
+            if (a == b)
+            {
+                b = 'X';
+                i++;     // move only 1 step
+            }
+            else
+                i += 2;
+        }
+        else
+        {
             b = 'X';
+            i++;
+        }
 
         int r1, c1, r2, c2;
         find(m, a, b, r1, c1, r2, c2);
@@ -137,6 +152,26 @@ string dec(string t, char m[5][5])
     return r;
 }
 
+// ---------- REMOVE FILLER X ----------
+string clean(string s)
+{
+    string r = "";
+
+    for (int i = 0; i < s.length(); i++)
+    {
+        if (i > 0 && i < s.length() - 1 &&
+            s[i] == 'X' && s[i - 1] == s[i + 1])
+            continue;
+
+        r += s[i];
+    }
+
+    if (r.back() == 'X')
+        r.pop_back();
+
+    return r;
+}
+
 int main()
 {
     int p = 11, g = 2, a = 5, b = 7, k1 = 8, k2 = 3;
@@ -166,6 +201,8 @@ int main()
     cout << "Darth sends to Bob: " << cB << endl;
 
     string final = dec(cB, mB);
+    final = clean(final);
+
     cout << "Bob receives: " << final << endl;
 
     return 0;
