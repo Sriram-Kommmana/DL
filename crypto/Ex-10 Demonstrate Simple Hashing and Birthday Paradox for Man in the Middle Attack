@@ -1,0 +1,196 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+/* ---------------- TASK 1 ---------------- */
+
+// Convert message to 32-byte padded array
+vector<unsigned char> padMessage(string msg) {
+    vector<unsigned char> bytes(msg.begin(), msg.end());
+
+    // pad with 0x01 until size = 32
+    while (bytes.size() < 32) {
+        bytes.push_back(0x01);
+    }
+    return bytes;
+}
+
+// Convert into 16 blocks (2 bytes each)
+vector<uint16_t> createBlocks(vector<unsigned char> &bytes) {
+    vector<uint16_t> blocks;
+
+    for (int i = 0; i < 32; i += 2) {
+        uint16_t block = (bytes[i] << 8) | bytes[i + 1];
+        blocks.push_back(block);
+    }
+    return blocks;
+}
+
+// Simple XOR Hash (16-bit)
+uint16_t simpleXORHash(vector<uint16_t> &blocks) {
+    uint16_t h = 0;
+    for (auto b : blocks) {
+        h ^= b;
+    }
+    return h;
+}
+
+// Rotate left
+uint16_t rotateLeft(uint16_t val, int bits) {
+    return (val << bits) | (val >> (16 - bits));
+}
+
+// Rounded XOR Hash
+uint16_t roundedXORHash(vector<uint16_t> &blocks) {
+    uint16_t h = 0;
+
+    for (auto b : blocks) {
+        h = rotateLeft(h, 1);  // rotate
+        h ^= b;                // XOR
+    }
+    return h;
+}
+
+/* ---------------- RSA (Simple Demo) ---------------- */
+
+// modular exponentiation
+long long modExp(long long base, long long exp, long long mod) {
+    long long res = 1;
+    base %= mod;
+
+    while (exp > 0) {
+        if (exp % 2) res = (res * base) % mod;
+        base = (base * base) % mod;
+        exp /= 2;
+    }
+    return res;
+}
+
+// RSA Key Generation (small demo primes)
+void generateRSA(long long &e, long long &d, long long &n) {
+    long long p = 61, q = 53;
+    n = p * q;
+    long long phi = (p - 1) * (q - 1);
+
+    e = 17; // public key
+
+    // find d such that (d*e) % phi = 1
+    for (d = 1; d < phi; d++) {
+        if ((d * e) % phi == 1) break;
+    }
+}
+
+/* ---------------- TASK 2 ---------------- */
+
+// Generate variations (change harmless characters)
+vector<string> generateVariations(string msg, int count) {
+    vector<string> variations;
+
+    for (int i = 0; i < count; i++) {
+        string temp = msg;
+
+        // modify spaces slightly
+        for (int j = 0; j < temp.size(); j++) {
+            if (temp[j] == ' ' && rand() % 2) {
+                temp[j] = '_'; // harmless change
+            }
+        }
+        variations.push_back(temp);
+    }
+    return variations;
+}
+
+// Birthday Attack Simulation
+void birthdayAttack(string m1, string m2) {
+    int n = 16; // hash size
+    int attempts = pow(2, n / 2);
+
+    cout << "\nEstimated attempts for collision (Birthday Attack): "
+         << attempts << endl;
+
+    vector<string> var1 = generateVariations(m1, attempts);
+    vector<string> var2 = generateVariations(m2, attempts);
+
+    unordered_map<uint16_t, string> table;
+
+    // hash all variations of m1
+    for (auto &v : var1) {
+        auto bytes = padMessage(v);
+        auto blocks = createBlocks(bytes);
+        uint16_t h = roundedXORHash(blocks);
+
+        table[h] = v;
+    }
+
+    // check collisions with m2 variations
+    for (auto &v : var2) {
+        auto bytes = padMessage(v);
+        auto blocks = createBlocks(bytes);
+        uint16_t h = roundedXORHash(blocks);
+
+        if (table.find(h) != table.end()) {
+            cout << "\nCOLLISION FOUND!\n";
+            cout << "Message 1: " << table[h] << endl;
+            cout << "Message 2: " << v << endl;
+            cout << "Hash: " << h << endl;
+            return;
+        }
+    }
+
+    cout << "\nNo collision found (simulation)\n";
+}
+
+/* ---------------- MAIN ---------------- */
+
+int main() {
+
+    string msg = "Contract Amount 30000 Dollars.";
+
+    cout << "Original Message:\n" << msg << endl;
+
+    // Step 1: Padding
+    auto bytes = padMessage(msg);
+
+    cout << "\nPadded Bytes (32 bytes):\n";
+    for (auto b : bytes) cout << (int)b << " ";
+    cout << endl;
+
+    // Step 2: Create blocks
+    auto blocks = createBlocks(bytes);
+
+    cout << "\n16 Blocks (16-bit each):\n";
+    for (auto b : blocks) cout << b << " ";
+    cout << endl;
+
+    // Step 3: Simple XOR Hash
+    uint16_t simpleHash = simpleXORHash(blocks);
+    cout << "\nSimple XOR Hash: " << simpleHash << endl;
+
+    // Step 4: Rounded XOR Hash
+    uint16_t roundHash = roundedXORHash(blocks);
+    cout << "Rounded XOR Hash: " << roundHash << endl;
+
+    // Step 5: RSA Signature
+    long long e, d, n;
+    generateRSA(e, d, n);
+
+    long long signature = modExp(roundHash, d, n);
+    cout << "\nSignature (Encrypted Hash): " << signature << endl;
+
+    // Step 6: Verification
+    long long decryptedHash = modExp(signature, e, n);
+    cout << "Decrypted Hash: " << decryptedHash << endl;
+
+    if (decryptedHash == roundHash)
+        cout << "Signature VERIFIED\n";
+    else
+        cout << "Signature INVALID\n";
+
+    /* ---------------- TASK 2 ---------------- */
+
+    string m1 = "Contract Amount 30000 Dollars.";
+    string m2 = "Contract Amount 40000 Dollars.";
+
+    birthdayAttack(m1, m2);
+
+    return 0;
+}
